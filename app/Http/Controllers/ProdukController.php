@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\produk;
+use App\Models\Produk;
 use Illuminate\Http\Request;
 
 class ProdukController extends Controller
@@ -12,7 +12,10 @@ class ProdukController extends Controller
      */
     public function index()
     {
-        //
+        $title = 'Produk';
+        $subtitle = 'index';
+        $produks = Produk::all();
+        return view('admin.produk.index', compact('title','subtitle','produks'));
     }
 
     /**
@@ -20,7 +23,9 @@ class ProdukController extends Controller
      */
     public function create()
     {
-        //
+        $title = 'Produk';
+        $subtitle = 'Create';
+        return view('admin.produk.create', compact('title', 'subtitle'));
     }
 
     /**
@@ -34,7 +39,7 @@ class ProdukController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(produk $produk)
+    public function show(Produk $produk)
     {
         //
     }
@@ -42,7 +47,7 @@ class ProdukController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(produk $produk)
+    public function edit(Produk $produk)
     {
         //
     }
@@ -50,7 +55,7 @@ class ProdukController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, produk $produk)
+    public function update(Request $request, Produk $produk)
     {
         //
     }
@@ -58,7 +63,7 @@ class ProdukController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(produk $produk)
+    public function destroy(Produk $produk)
     {
         //
     }

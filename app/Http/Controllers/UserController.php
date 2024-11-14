@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Auth\Events\Validated;
+
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -63,15 +64,15 @@ class UserController extends Controller
     {
         //
     }
-    
+
     public function login()
     {
-        return view ('auth.login');
+        return view('auth.login');
     }
 
     public function register()
     {
-        return view ('auth.register');
+        return view('auth.register');
     }
 
     public function registerStore(Request $request)
@@ -85,9 +86,29 @@ class UserController extends Controller
 
         $simpan = User::create($validate);
         if ($simpan) {
-             return redirect()->route('login')->with('success', 'Registrasi Berhasil');
-        }else{
-             return redirect()->route('register')-with('error', 'Registrasi Gagal');
+            return redirect()->route('login')->with('success', 'Registrasi Berhasil');
+        } else {
+            return redirect()->route('register') - with('error', 'Registrasi Gagal');
         }
+    }
+    public function loginCheck(Request $request)
+    {
+        $validate = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
+        if (Auth::attempt($validate)) {
+            $request->session()->regenerate();
+            return redirect()->intended('/dashboard');
+        } else {
+            return back()->with('error', 'Login Gagal username / password salah!');
+        }
+    }
+
+    public function logout()
+    {
+        Auth::logout();
+        return redirect()->route('login')->with('succsess', 'logout berhasil');
     }
 }
