@@ -3,68 +3,137 @@
 namespace App\Http\Controllers;
 
 use App\Models\Produk;
+use App\Models\LogStok;
 use Illuminate\Http\Request;
 
 class ProdukController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Menampilkan daftar produk
     public function index()
     {
-        $title = 'Produk';
-        $subtitle = 'index';
-        $produks = Produk::all();
-        return view('admin.produk.index', compact('title','subtitle','produks'));
+        $title = 'Produk'; 
+        $subtitle = 'Index';
+        $produks = Produk::all(); // Ambil semua data produk
+        return view('admin.produk.index', compact('title', 'subtitle', 'produks'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    // Menampilkan form untuk tambah produk baru
     public function create()
     {
-        $title = 'Produk';
+        $title = 'Produk'; 
         $subtitle = 'Create';
         return view('admin.produk.create', compact('title', 'subtitle'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Proses simpan produk baru
     public function store(Request $request)
     {
-        //
+        $validate = $request->validate([
+            'NamaProduk' => 'required',
+            'Harga' => 'required|numeric',
+            'Stok' => 'required|numeric',
+        ]);
+
+        $simpan = Produk::create($validate);
+
+        if ($simpan) {
+            return redirect()->route('produk.index')->with('success', 'Produk berhasil disimpan!');
+        } else {
+            return redirect()->route('produk.index')->with('error', 'Produk gagal disimpan.');
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Produk $produk)
+    // Menampilkan form edit produk
+    public function edit($id)
     {
-        //
+        $produk = Produk::findOrFail($id);
+
+        return view('admin.produk.edit', [
+            'title' => 'Edit Produk',
+            'subtitle' => 'Form Edit Produk',
+            'produk' => $produk,
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Produk $produk)
+    // Proses update produk
+    public function update(Request $request, $id)
     {
-        //
+        $validate = $request->validate([
+            'NamaProduk' => 'required',
+            'Harga' => 'required|numeric',
+            'Stok' => 'required|numeric',
+        ]);
+
+        $produk = Produk::findOrFail($id);
+        $produk->update($validate);
+
+        return redirect()->route('produk.index')->with('success', 'Produk berhasil diperbarui!');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Produk $produk)
+    // Hapus produk
+    public function destroy($id)
     {
-        //
+        $produk = Produk::findOrFail($id);
+        $delete = $produk->delete();
+
+        if ($delete) {
+            return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus.');
+        } else {
+            return redirect()->route('produk.index')->with('error', 'Produk gagal dihapus.');
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Produk $produk)
+    // Menampilkan form tambah stok
+    public function formTambahStok($id)
     {
-        //
+        $produk = Produk::findOrFail($id); 
+        return view('admin.produk.tambahStok', compact('produk'));
+    }
+
+    // Proses tambah stok
+    public function prosesTambahStok(Request $request, $id)
+    {
+        $request->validate([
+            'jumlah_stok' => 'required|integer|min:1',
+        ]);
+
+        $produk = Produk::findOrFail($id);
+        $stokAwal = $produk->Stok;
+        $produk->Stok += $request->jumlah_stok; 
+        $produk->save();
+
+        LogStok::create([
+            'produk_id' => $produk->id,
+            'stok_awal' => $stokAwal,
+            'stok_akhir' => $produk->Stok,
+            'perubahan' => $request->jumlah_stok,
+            'keterangan' => 'Penambahan stok manual',
+        ]);
+
+        return redirect()->route('produk.index')->with('success', 'Stok berhasil ditambahkan!');
+    }
+
+    // Proses pengurangan stok
+    public function reduceStock($id, $quantity)
+    {
+        $produk = Produk::findOrFail($id);
+
+        if ($produk->Stok >= $quantity) {
+            $stokAwal = $produk->Stok;
+            $produk->Stok -= $quantity;
+            $produk->save();
+
+            LogStok::create([
+                'produk_id' => $produk->id,
+                'stok_awal' => $stokAwal,
+                'stok_akhir' => $produk->Stok,
+                'perubahan' => -$quantity, 
+                'keterangan' => 'Pengurangan stok karena transaksi',
+            ]);
+
+            return redirect()->route('produk.index')->with('success', 'Stok berhasil dikurangi!');
+        } else {
+            return redirect()->route('produk.index')->with('error', 'Stok tidak cukup.');
+        }
     }
 }

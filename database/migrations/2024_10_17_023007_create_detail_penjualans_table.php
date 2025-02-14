@@ -17,8 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('ProdukId');
             $table->integer('JumlahProduk');
             $table->decimal('SubTotal',10,2);
-            $table->timestamps();
-            
+            $table->timestamps();           
         });
     }
 
